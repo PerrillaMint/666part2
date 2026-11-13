@@ -8,18 +8,23 @@ This project implements the Phase 1 requirements for the COEN366 emergency notif
 - SUBSCRIBE
 - UNSUBSCRIBE
 - DE-REGISTER
+- ATTACH_REQ
+- GET_ATTACHMENTS
 
-All commands are handled by the UDP server, which stores client and subscription data in text files.
+  All commands are handled by the UDP and TCP servers, which store client and subscription data in text files.
 
 ## How to Run
 
-1. Start the server:
+1. Start the UDP server:
    python udp_server.py
 
-2. Run the client:
-   python udp_client.py
+2. Start the TCP server:
+   python tcp_server.py
+   
+3. Run the client:
+   python main_client.py
 
-The client sends REGISTER, SUBSCRIBE, and DE-REGISTER commands to the server.
+The client sends REGISTER, SUBSCRIBE, ATTACH_REQ, GET_ATTACHMENTS, UNSUBSCRIBE, and DE-REGISTER commands to the server.
 
 ## Notes
 

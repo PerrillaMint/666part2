@@ -261,6 +261,57 @@ def handle_deregister(message, addr):
     reply = f"DE-REGISTERED {req}"
     send(reply, addr)
 
+def handle_attach_request(message, addr):
+    parts=message.split() #split the message into parts (list of string, like an array in cpp)
+    if len(parts) < 4:
+        reply = f"ATTACH-DENIED {parts[1]} {parts[2]} Malformed_Message"
+        send(reply, addr)
+        return
+
+    command=parts[0] #first prt is the command
+    req=parts[1]
+    incident_nb=parts[2]
+    filename=parts[3]
+
+    sender_ip = addr[0] #which ip sent the subscribe request
+    sender_udp = str(addr[1]) #which udp port sent the subscribe request
+    
+    client_name = None
+
+    try:
+        with open("clients.txt", "r") as f: #r is read
+            for line in f:
+                name, role, ip, udp_port, tcp_port = line.strip().split()
+                if ip == sender_ip and udp_port == sender_udp:
+                    client_name = name
+                    break
+    except FileNotFoundError:
+        pass
+
+    if client_name is None:
+        reply = f"ATTACH-DENIED {req} {incident_nb} Not_Registered"
+        send(reply,addr)
+        return
+
+    try:
+        with open("../incidents.txt", "r") as f: #r is read
+            found=False
+            for line in f:
+                inc_nb, publisher_name, ip_addr, port, filename_in_file = line.strip().split() # format of the incidents in incidents.txt
+                if inc_nb == incident_nb and filename_in_file == filename:
+                    found=True
+                    break
+            if found==False:
+                reply = f"ATTACH-DENIED {req} {inc_nb} File_Not_Found"
+                send(reply, addr)
+                return
+    except FileNotFoundError:
+        reply = f"ATTACH-DENIED {req} {incident_nb} Incident_Not_Found"
+        send(reply, addr)
+        return
+
+    reply = f"ATTACH_INFO {req} {incident_nb} {publisher_name} {ip_addr} {port} {filename}"
+    send(reply, addr)
     
 #main loop (while)
 while True:
@@ -282,6 +333,8 @@ while True:
             handle_unsubscribe(message, addr)
         elif command=="DE-REGISTER":
             handle_deregister(message, addr)
+        elif command=="ATTACH_REQ":
+            handle_attach_request(message, addr)
         else:
             print("[WARN] Unknown command:", command)
     except Exception as e:
